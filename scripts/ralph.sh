@@ -17,12 +17,26 @@ prompt=$(cat "$2")
 
 # For each iteration, run Claude Code with the prompt from the file.
 for ((i=1; i<=$1; i++)); do
-  result=$(claude --permission-mode acceptEdits -p "$prompt")
+  temp_output=$(mktemp)
 
-  echo "$result"
+  claude --permission-mode acceptEdits \
+      -p "$prompt" \
+      --output-format=stream-json \
+      --include-partial-messages \
+      --verbose \
+      | tee "$temp_output" \
+      | bunx repomirror visualize
 
-  if [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
-    echo "PRD complete, exiting."
+  # Push changes to git (current branch)
+  git push
+
+  # Check completion in captured output
+  if grep -q "<promise>COMPLETE</promise>" "$temp_output"; then
+    echo "Job complete, exiting."
+    rm "$temp_output"
     exit 0
   fi
+
+  rm "$temp_output"
+  echo -e "\n\n========================LOOP ($i/$1)=========================\n\n"
 done
