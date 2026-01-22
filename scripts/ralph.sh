@@ -17,7 +17,7 @@ prompt=$(cat "$2")
 
 # For each iteration, run Claude Code with the prompt from the file.
 for ((i=1; i<=$1; i++)); do
-  result=$(docker sandbox run claude --permission-mode acceptEdits -p "$prompt")
+  result=$(claude --permission-mode acceptEdits -p "$prompt")
 
   echo "$result"
 
