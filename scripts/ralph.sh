@@ -1,10 +1,17 @@
 # ralph.sh
-# Usage: ./ralph.sh <iterations> <prompt-file>
+# Usage: ./ralph.sh [--dangerous] <iterations> <prompt-file>
 
 set -e
 
+# Parse optional --dangerous flag
+PERMISSION_MODE="--permission-mode acceptEdits"
+if [ "$1" = "--dangerous" ]; then
+  PERMISSION_MODE="--dangerously-skip-permissions"
+  shift
+fi
+
 if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <iterations> <prompt-file>"
+  echo "Usage: $0 [--dangerous] <iterations> <prompt-file>"
   exit 1
 fi
 
@@ -19,13 +26,13 @@ prompt=$(cat "$2")
 for ((i=1; i<=$1; i++)); do
   temp_output=$(mktemp)
 
-  claude --permission-mode acceptEdits \
+  claude $PERMISSION_MODE \
       -p "$prompt" \
       --output-format=stream-json \
       --include-partial-messages \
       --verbose \
       | tee "$temp_output" \
-      | bunx repomirror visualize
+      | "$(dirname "$0")/visualize-stream.sh"
 
   # Push changes to git (current branch)
   git push
