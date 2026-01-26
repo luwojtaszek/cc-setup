@@ -1,29 +1,60 @@
 #!/bin/bash
-# install.sh - Add cc-setup scripts to PATH
-
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")/scripts" && pwd)"
-EXPORT_LINE="export PATH=\"$SCRIPT_DIR:\$PATH\""
-MARKER="# cc-setup scripts"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLAUDE_DIR="$HOME/.claude"
+STATE_FILE="$CLAUDE_DIR/.cc-setup-state"
 
-add_to_rc() {
-  local rc_file="$1"
-  if [ -f "$rc_file" ]; then
-    if grep -q "$MARKER" "$rc_file"; then
-      echo "Already installed in $rc_file"
-    else
-      echo "" >> "$rc_file"
-      echo "$MARKER" >> "$rc_file"
-      echo "$EXPORT_LINE" >> "$rc_file"
-      echo "Added to $rc_file"
+# Parse arguments
+FORCE=false
+DRY_RUN=false
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -f|--force) FORCE=true; shift ;;
+        -n|--dry-run) DRY_RUN=true; shift ;;
+        *) shift ;;
+    esac
+done
+
+# Skill commands to run (paste any command format directly)
+SKILL_COMMANDS=(
+    "npx skills add https://github.com/vercel-labs/agent-browser --skill agent-browser"
+    "npx skills add https://github.com/anthropics/skills --skill frontend-design"
+)
+
+mkdir -p "$CLAUDE_DIR"
+
+# Copy settings
+if [ "$DRY_RUN" = true ]; then
+    echo "Would copy settings.json to $CLAUDE_DIR/settings.json"
+else
+    cp "$SCRIPT_DIR/setup/settings.json" "$CLAUDE_DIR/settings.json"
+    echo "Copied settings.json"
+fi
+
+# Load previous state (or empty if force)
+INSTALLED=()
+if [ "$FORCE" = false ] && [ -f "$STATE_FILE" ]; then
+    mapfile -t INSTALLED < "$STATE_FILE"
+fi
+
+# Install skills
+for cmd in "${SKILL_COMMANDS[@]}"; do
+    if [[ ! " ${INSTALLED[*]} " =~ " ${cmd} " ]]; then
+        if [ "$DRY_RUN" = true ]; then
+            echo "Would run: $cmd"
+        else
+            echo "Running: $cmd"
+            eval "$cmd"
+        fi
     fi
-  fi
-}
+done
 
-add_to_rc "$HOME/.bashrc"
-add_to_rc "$HOME/.zshrc"
+# Save new state
+if [ "$DRY_RUN" = true ]; then
+    echo "Would save state to $STATE_FILE"
+else
+    printf '%s\n' "${SKILL_COMMANDS[@]}" > "$STATE_FILE"
+fi
 
-echo ""
-echo "Done! Restart your shell or run:"
-echo "  source ~/.bashrc  # or source ~/.zshrc"
+echo "Done!"
