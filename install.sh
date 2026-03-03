@@ -48,6 +48,7 @@ done
 
 # Install skills (local symlinks + external npx installs)
 if [ "$DRY_RUN" = true ]; then
+    echo "Would run dependency installer"
     echo "Would run skills installer"
 else
     # Source nvm if npx is not already on PATH (needed for systemd/non-interactive shells)
@@ -55,6 +56,7 @@ else
         export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
         [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
     fi
+    bash "$SCRIPT_DIR/claude/deps/install.sh"
     bash "$SCRIPT_DIR/claude/skills/install.sh"
 fi
 
