@@ -6,12 +6,22 @@ CLAUDE_DIR="$HOME/.claude"
 
 # Parse arguments
 DRY_RUN=false
+PULL=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         -n|--dry-run) DRY_RUN=true; shift ;;
+        -p|--pull) PULL=true; shift ;;
         *) shift ;;
     esac
 done
+
+# Pull latest changes if requested
+if [ "$PULL" = true ]; then
+    echo "Pulling latest changes..."
+    git -C "$SCRIPT_DIR" pull
+    chmod -R a+rX "$SCRIPT_DIR"
+    echo "Pull complete."
+fi
 
 mkdir -p "$CLAUDE_DIR"
 
