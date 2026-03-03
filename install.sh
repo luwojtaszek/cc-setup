@@ -50,6 +50,11 @@ done
 if [ "$DRY_RUN" = true ]; then
     echo "Would run skills installer"
 else
+    # Source nvm if npx is not already on PATH (needed for systemd/non-interactive shells)
+    if ! command -v npx &>/dev/null; then
+        export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    fi
     bash "$SCRIPT_DIR/claude/skills/install.sh"
 fi
 

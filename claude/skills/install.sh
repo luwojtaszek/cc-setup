@@ -48,16 +48,19 @@ externals=(
 ext_ok=0
 ext_fail=0
 
+_skill_log=$(mktemp)
+trap 'rm -f "$_skill_log"' EXIT
+
 for entry in "${externals[@]}"; do
   skill_name="${entry##*--skill }"
 
-  if npx skills add $entry -a claude-code -g -y >/tmp/skill_install.log 2>&1; then
+  if npx skills add $entry -a claude-code -g -y >"$_skill_log" 2>&1; then
     ext_ok=$((ext_ok + 1))
     echo "synced: $skill_name"
   else
     ext_fail=$((ext_fail + 1))
     echo "FAIL: $skill_name"
-    cat /tmp/skill_install.log
+    cat "$_skill_log"
   fi
 done
 
