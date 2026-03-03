@@ -1,0 +1,56 @@
+---
+name: git-clean-gone
+description: Clean up local git branches deleted from remote. Use when the user wants to prune stale branches marked as [gone], including their worktrees.
+license: Apache-2.0
+compatibility: Requires git. Designed for coding agents with shell access.
+metadata:
+  author: Anthropic
+  version: "1.0"
+---
+
+# Git Clean Gone Branches
+
+Clean up all git branches marked as [gone] (branches deleted on the remote but still exist locally), including removing associated worktrees.
+
+## Step 1: List branches to identify any with [gone] status
+
+```bash
+git branch -v
+```
+
+Note: Branches with a '+' prefix have associated worktrees and must have their worktrees removed before deletion.
+
+## Step 2: Identify worktrees that need to be removed for [gone] branches
+
+```bash
+git worktree list
+```
+
+## Step 3: Remove worktrees and delete [gone] branches
+
+```bash
+# Process all [gone] branches, removing '+' prefix if present
+git branch -v | grep '\[gone\]' | sed 's/^[+* ]//' | awk '{print $1}' | while read branch; do
+  echo "Processing branch: $branch"
+  # Find and remove worktree if it exists
+  worktree=$(git worktree list | grep "\\[$branch\\]" | awk '{print $1}')
+  if [ ! -z "$worktree" ] && [ "$worktree" != "$(git rev-parse --show-toplevel)" ]; then
+    echo "  Removing worktree: $worktree"
+    git worktree remove --force "$worktree"
+  fi
+  # Delete the branch
+  echo "  Deleting branch: $branch"
+  git branch -D "$branch"
+done
+```
+
+## Expected Behavior
+
+After executing these commands:
+
+- See a list of all local branches with their status
+- Identify and remove any worktrees associated with [gone] branches
+- Delete all branches marked as [gone]
+- Provide feedback on which worktrees and branches were removed
+
+If no branches are marked as [gone], report that no cleanup was needed.

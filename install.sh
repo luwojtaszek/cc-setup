@@ -19,7 +19,6 @@ mkdir -p "$CLAUDE_DIR"
 SYMLINKS=(
     "claude/settings.json:settings.json"
     "claude/status-line.sh:status-line.sh"
-    "claude/skills:skills"
 )
 
 for item in "${SYMLINKS[@]}"; do
@@ -31,11 +30,17 @@ for item in "${SYMLINKS[@]}"; do
     if [ "$DRY_RUN" = true ]; then
         echo "Would symlink $dst_path -> $src_path"
     else
-        # Remove existing file/symlink/directory
         rm -rf "$dst_path"
         ln -s "$src_path" "$dst_path"
         echo "Linked $dst -> $src_path"
     fi
 done
+
+# Install skills (local symlinks + external npx installs)
+if [ "$DRY_RUN" = true ]; then
+    echo "Would run skills installer"
+else
+    bash "$SCRIPT_DIR/claude/skills/install.sh"
+fi
 
 echo "Done!"

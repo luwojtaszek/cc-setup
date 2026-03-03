@@ -42,6 +42,9 @@ NC='\033[0m' # No Color
 # Change to the current directory to get git info
 cd "$current_dir" 2>/dev/null || cd /
 
+# Prevent git from updating the index stat cache to avoid race conditions
+export GIT_OPTIONAL_LOCKS=0
+
 # Get git branch
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     branch=$(git branch --show-current 2>/dev/null || echo "detached")

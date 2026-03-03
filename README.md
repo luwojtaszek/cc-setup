@@ -1,43 +1,39 @@
 # cc-setup
 
-Setup tool for Claude Code that installs skills and configures settings.
+Setup tool for Claude Code — symlinks config files and installs skills.
 
 ## What it does
 
-- Installs Claude Code skills via customizable commands
-- Copies settings.json to ~/.claude/
-- Tracks executed commands for idempotent updates
+- Symlinks `settings.json` and `status-line.sh` to `~/.claude/`
+- Runs skill installer: symlinks local skills + installs external skills via `npx`
 
 ## Usage
 
 ```bash
-./install.sh          # Install/update skills (idempotent)
-./install.sh --force  # Force reinstall all skills
-./install.sh -f       # Same as --force
-./install.sh --dry-run  # Show what would happen
-./install.sh -n         # Same as --dry-run
+./install.sh          # install everything
+./install.sh --dry-run  # preview what would happen
+./install.sh -n         # same as --dry-run
 ```
 
-## Configuration
-
-### Skills
-
-Edit the `SKILL_COMMANDS` array in `install.sh`. Paste any command format directly:
+Tip: add a shell alias for quick access:
 
 ```bash
-SKILL_COMMANDS=(
-    "npx skills add https://github.com/vercel-labs/agent-browser --skill agent-browser"
-    "npx skills add https://github.com/anthropics/skills --skill frontend-design"
-)
+alias cc-setup='bash ~/path/to/cc-setup/install.sh'
 ```
 
-### Settings
+## Adding skills
 
-Edit `setup/settings.json` to customize Claude Code settings.
+### Local skills
 
-## How it works
+Add a directory under `claude/skills/` with a `SKILL.md` file. The installer symlinks each skill dir into `~/.claude/skills/`.
 
-1. Copies settings.json to ~/.claude/settings.json
-2. Compares current SKILL_COMMANDS against previous state
-3. Runs new commands that haven't been executed before
-4. Saves state to ~/.claude/.cc-setup-state
+### External skills
+
+Edit the `externals` array in `claude/skills/install.sh`:
+
+```bash
+externals=(
+  "vercel-labs/skills --skill find-skills"
+  "anthropics/claude-plugins-official --skill frontend-design"
+)
+```
