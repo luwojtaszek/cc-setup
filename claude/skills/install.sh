@@ -3,11 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="$HOME/.claude/skills"
+AGENTS_TARGET_DIR="$HOME/.agents/skills"
 
 echo "Installing skills..."
 
 # --- 1. Local skills (symlinks) ---
 mkdir -p "$TARGET_DIR"
+mkdir -p "$AGENTS_TARGET_DIR"
 
 installed=0
 existing_local=()
@@ -15,21 +17,24 @@ existing_local=()
 for skill_dir in "$SCRIPT_DIR"/*/; do
   skill_name="$(basename "$skill_dir")"
 
+  # Claude symlink
   target="$TARGET_DIR/$skill_name"
-
   if [ -L "$target" ]; then
     existing_local+=("$skill_name")
-    continue
-  fi
-
-  if [ -e "$target" ]; then
+  elif [ -e "$target" ]; then
     echo "WARN: $skill_name — non-symlink file exists at $target, skipping"
-    continue
+  else
+    ln -s "$skill_dir" "$target"
+    installed=$((installed + 1))
+    echo "link: $skill_name"
   fi
 
-  ln -s "$skill_dir" "$target"
-  installed=$((installed + 1))
-  echo "link: $skill_name"
+  # Agents symlink (best-effort)
+  agents_target="$AGENTS_TARGET_DIR/$skill_name"
+  if [ ! -L "$agents_target" ] && [ ! -e "$agents_target" ]; then
+    ln -s "$skill_dir" "$agents_target"
+    echo "link (agents): $skill_name"
+  fi
 done
 
 if [ ${#existing_local[@]} -gt 0 ]; then
