@@ -17,10 +17,15 @@ done
 
 # Pull latest changes if requested
 if [ "$PULL" = true ]; then
-    echo "Pulling latest changes..."
-    git -C "$SCRIPT_DIR" pull
-    chmod -R a+rX "$SCRIPT_DIR"
-    echo "Pull complete."
+    if [ "$DRY_RUN" = true ]; then
+        echo "Would pull latest changes in $SCRIPT_DIR"
+        echo "Would ensure readable permissions under $SCRIPT_DIR"
+    else
+        echo "Pulling latest changes..."
+        git -C "$SCRIPT_DIR" pull --ff-only
+        chmod -R a+rX "$SCRIPT_DIR"
+        echo "Pull complete."
+    fi
 fi
 
 mkdir -p "$CLAUDE_DIR"
@@ -46,9 +51,18 @@ for item in "${SYMLINKS[@]}"; do
     fi
 done
 
-# Install skills (local symlinks + external npx installs)
+# Install skills and Superpowers
+SUPERPOWERS_ARGS=()
+if [ "$DRY_RUN" = true ]; then
+    SUPERPOWERS_ARGS+=(--dry-run)
+fi
+if [ "$PULL" = true ]; then
+    SUPERPOWERS_ARGS+=(--pull)
+fi
+
 if [ "$DRY_RUN" = true ]; then
     echo "Would run dependency installer"
+    bash "$SCRIPT_DIR/superpowers/install.sh" "${SUPERPOWERS_ARGS[@]}"
     echo "Would run skills installer"
 else
     # Source nvm if npx is not already on PATH (needed for systemd/non-interactive shells)
@@ -57,6 +71,7 @@ else
         [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
     fi
     bash "$SCRIPT_DIR/claude/deps/install.sh"
+    bash "$SCRIPT_DIR/superpowers/install.sh" "${SUPERPOWERS_ARGS[@]}"
     bash "$SCRIPT_DIR/claude/skills/install.sh"
 fi
 
