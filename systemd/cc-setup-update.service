@@ -3,6 +3,7 @@ Description=Update cc-setup (git pull + install)
 
 [Service]
 Type=oneshot
+TimeoutStartSec=600
 Environment=HOME=/root
 EnvironmentFile=/etc/cc-setup.env
 ExecStart=/bin/bash -c '/opt/cc-setup/install.sh --pull && for user in $USERS; do if [ "$user" = "root" ]; then continue; fi; sudo -H -u "$user" /opt/cc-setup/install.sh; done'

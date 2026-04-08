@@ -4,7 +4,6 @@
     "CLAUDE_CODE_NO_FLICKER": "1"
   },
   "permissions": {
-    "defaultMode": "auto",
     "allow": [
       "Bash",
       "Edit",
@@ -13,7 +12,8 @@
       "WebFetch",
       "WebSearch",
       "mcp__*"
-    ]
+    ],
+    "defaultMode": "auto"
   },
   "statusLine": {
     "type": "command",
@@ -24,5 +24,6 @@
     "superpowers@claude-plugins-official": true,
     "playground@claude-plugins-official": true
   },
-  "effortLevel": "high"
+  "effortLevel": "high",
+  "skipAutoPermissionPrompt": true
 }
