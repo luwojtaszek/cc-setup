@@ -1,68 +1,92 @@
 # cc-setup
 
-Setup tool for Claude Code, Codex CLI, and OpenCode.
-
-## What it does
-
-- Symlinks `settings.json` and `status-line.sh` to `~/.claude/`
-- Installs standalone skills: symlinks local skills + installs external skills via `npx`
-- Installs Superpowers using the upstream-recommended method for each agent:
-  - Claude Code: plugin install via `claude plugin install`
-  - Codex CLI: clone to `~/.codex/superpowers` + symlink `~/.agents/skills/superpowers`
-  - OpenCode: global `plugin` entry in `~/.config/opencode/opencode.json`
-- Installs Superpowers only for agent CLIs detected on `PATH`
+Strict setup for Claude Code and Codex.
 
 ## Usage
 
 ```bash
-./install.sh          # install everything
-./install.sh --dry-run  # preview what would happen
-./install.sh -n         # same as --dry-run
-./install.sh --pull     # update this repo and Superpowers
+./install.sh
+./install.sh --dry-run
+./install.sh --pull
 ```
 
-Tip: add a shell alias for quick access:
+`./install.sh` is the only supported entrypoint. Old sub-installers under `claude/skills/` and `superpowers/` delegate back to it.
 
-```bash
-alias cc-setup='bash ~/path/to/cc-setup/install.sh'
-```
+## Layout
 
-## Superpowers
+- `agents/` shared assets for Claude Code and Codex
+- `claude/` Claude-only config
+- `codex/` Codex-only config
+- `.agent/install/manifest.json` installer source of truth
+- `.agent/superpowers/` Superpowers specs/plans
 
-This repo does not use `skills.sh/obra/superpowers/using-superpowers`. It installs Superpowers using the upstream-recommended setup for each supported tool:
+## Managed targets
 
-- Claude Code: installs `superpowers@claude-plugins-official`
-- Codex CLI: clones `https://github.com/obra/superpowers.git` to `~/.codex/superpowers` and links `~/.agents/skills/superpowers`
-- OpenCode: adds `superpowers@git+https://github.com/obra/superpowers.git` to `~/.config/opencode/opencode.json`
+Config files are symlinked from repo:
 
-Superpowers is installed only for detected agent CLIs on `PATH`:
+- `claude/settings.json` -> `~/.claude/settings.json`
+- `claude/status-line.sh` -> `~/.claude/status-line.sh`
+- `codex/config.toml` -> `~/.codex/config.toml`
 
-- Claude Code is detected from the `claude` CLI with plugin support
-- Codex is detected from the `codex` CLI
-- OpenCode is detected from the `opencode` CLI
+Skills are copied, never symlinked:
 
-Existing config directories alone do not trigger installation.
+- local skills from `agents/skills/`
+- external skills from `npx skills`
+- Claude Code target: `~/.claude/skills`
+- Codex target: `~/.agents/skills`
 
-For Codex, the installer also enables:
+Codex config is repo-managed and enables:
 
 ```toml
 [features]
 multi_agent = true
 ```
 
-## Adding skills
+## External skills
 
-### Local skills
+Managed external skills:
 
-Add a directory under `claude/skills/` with a `SKILL.md` file. The installer symlinks each skill dir into `~/.claude/skills/`.
+- `vercel-labs/skills --skill find-skills`
+- `vercel-labs/agent-browser --skill agent-browser`
+- `anthropics/skills --skill frontend-design`
+- `vercel-labs/ai --skill ai-sdk`
 
-### External skills
+Each fetch runs with timeout. Logs go to:
 
-Edit the `externals` array in `claude/skills/install.sh`:
-
-```bash
-externals=(
-  "vercel-labs/skills --skill find-skills"
-  "anthropics/claude-plugins-official --skill frontend-design"
-)
+```text
+~/.config/cc-setup/logs/
 ```
+
+## Superpowers
+
+Superpowers is cloned or updated in cache, then copied into Codex's primary target:
+
+```text
+~/.cache/cc-setup/superpowers
+~/.agents/skills/superpowers
+```
+
+Codex does not depend on marketplace/plugin flow.
+
+## Drift
+
+Managed target drift is fatal before mutation.
+
+Examples:
+
+- config target exists but is not the expected symlink
+- copied skill hash differs from installer state
+- copied skill target is replaced by a symlink
+- managed skill target has no recorded state
+
+State file:
+
+```text
+~/.config/cc-setup/state.json
+```
+
+Fix drift manually, then rerun `./install.sh`.
+
+## Adding local skills
+
+Add a directory under `agents/skills/` with `SKILL.md`.

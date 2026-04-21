@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "$*" >> "$HOME/npx.log"
+if [ "${CC_SETUP_NPX_MODE:-ok}" = "hang" ]; then
+  sleep 5
+fi
+
+repo=""
+skill=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --skill)
+      shift
+      skill="$1"
+      ;;
+    -a)
+      shift
+      ;;
+    skills|add|--copy|-g|-y|claude-code|codex)
+      ;;
+    *)
+      [ -z "$repo" ] && repo="$1"
+      ;;
+  esac
+  shift
+done
+
+mkdir -p "$HOME/.claude/skills/$skill" "$HOME/.agents/skills/$skill"
+printf '# %s\n' "$skill" > "$HOME/.claude/skills/$skill/SKILL.md"
+cp "$HOME/.claude/skills/$skill/SKILL.md" "$HOME/.agents/skills/$skill/SKILL.md"

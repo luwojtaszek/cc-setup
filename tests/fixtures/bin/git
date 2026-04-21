@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "$*" >> "$HOME/git.log"
+if [ "$1" = "clone" ]; then
+  target="${@: -1}"
+  mkdir -p "$target/.git" "$target/skills/using-superpowers"
+  printf '# using-superpowers\n' > "$target/skills/using-superpowers/SKILL.md"
+fi
+exit 0

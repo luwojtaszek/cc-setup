@@ -1,0 +1,55 @@
+{
+  "configs": [
+    {
+      "source": "claude/settings.json",
+      "target": "~/.claude/settings.json"
+    },
+    {
+      "source": "claude/status-line.sh",
+      "target": "~/.claude/status-line.sh"
+    },
+    {
+      "source": "codex/config.toml",
+      "target": "~/.codex/config.toml"
+    }
+  ],
+  "localSkillsDir": "agents/skills",
+  "externalSkills": [
+    {
+      "repo": "vercel-labs/skills",
+      "skill": "find-skills",
+      "agents": [
+        "claude-code",
+        "codex"
+      ]
+    },
+    {
+      "repo": "vercel-labs/agent-browser",
+      "skill": "agent-browser",
+      "agents": [
+        "claude-code",
+        "codex"
+      ]
+    },
+    {
+      "repo": "anthropics/skills",
+      "skill": "frontend-design",
+      "agents": [
+        "claude-code",
+        "codex"
+      ]
+    },
+    {
+      "repo": "vercel-labs/ai",
+      "skill": "ai-sdk",
+      "agents": [
+        "claude-code",
+        "codex"
+      ]
+    }
+  ],
+  "superpowers": {
+    "repoUrl": "https://github.com/obra/superpowers.git",
+    "target": "~/.agents/skills/superpowers"
+  }
+}
