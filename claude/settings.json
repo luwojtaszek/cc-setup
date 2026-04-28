@@ -25,5 +25,7 @@
     "playground@claude-plugins-official": true
   },
   "effortLevel": "xhigh",
+  "theme": "light",
+  "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true
 }
